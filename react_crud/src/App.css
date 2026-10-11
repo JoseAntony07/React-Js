@@ -1,0 +1,97 @@
+.container {
+  max-width: 720px;
+  margin: 40px auto;
+  padding: 0 16px;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.form br {
+  display: none;
+}
+
+input {
+  padding: 10px 12px;
+  font-size: 15px;
+  border: 1px solid #c9ced6;
+  border-radius: 6px;
+}
+
+input:focus {
+  outline: 2px solid #3b6fd4;
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+button {
+  padding: 8px 14px;
+  font-size: 14px;
+  color: #fff;
+  background: #3b6fd4;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #2f5bb3;
+}
+
+button.secondary {
+  color: #1f2937;
+  background: #e5e7eb;
+}
+
+button.secondary:hover {
+  background: #d1d5db;
+}
+
+button.danger {
+  background: #c0392b;
+  margin-left: 6px;
+}
+
+button.danger:hover {
+  background: #a02f23;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+th {
+  background: #f3f4f6;
+  font-weight: 600;
+}
+
+td.empty {
+  text-align: center;
+  color: #6b7280;
+}
+
+@media (max-width: 600px) {
+  th,
+  td {
+    padding: 8px 6px;
+    font-size: 13px;
+  }
+}

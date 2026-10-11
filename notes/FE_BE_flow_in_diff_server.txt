@@ -1,0 +1,89 @@
+
+
+## 🌐 Scenario: User opens your website
+
+> Example URL: `https://yourdomain.com`
+
+---
+
+## 🔄 Step-by-Step Flow (With 2 Servers)
+
+### 🧍 1. **User enters URL in browser**
+
+* Browser sends a **request to Server 1** (React frontend server)
+
+---
+
+### 🧱 2. **Server 1: Firewall allows access to Nginx**
+
+* Port `80` (HTTP) or `443` (HTTPS) is open
+* Firewall allows the request
+* The request reaches **Nginx on Server 1**
+
+---
+
+### 🌐 3. **Nginx serves the React App**
+
+* Nginx serves the `index.html` and other static files (JS, CSS) from React's `build/` folder
+* These files are loaded into the browser
+
+---
+
+### ⚙️ 4. **React App runs in the browser**
+
+* After loading, React starts executing in the browser
+* It sends API requests to your backend — **Server 2** (e.g., `GET /api/products`)
+
+---
+
+### 🔀 5. **React sends API call → goes through Nginx again**
+
+* If you’ve configured Nginx on Server 1 to proxy `/api/`:
+
+  * The API call goes to `yourdomain.com/api/...`
+  * Nginx catches it and **proxies it to Server 2 (Gunicorn)**
+
+---
+
+### 🔁 6. **Server 2: Firewall allows request from Server 1 only**
+
+* Server 2’s firewall checks: “Is this from Server 1’s IP?”
+* If yes, it allows the request to **Gunicorn**
+
+---
+
+### 🐍 7. **Gunicorn receives request → runs Django**
+
+* Gunicorn passes the request to Django
+* Django processes it (e.g., queries the DB) and returns a response
+
+---
+
+### 📦 8. **Response flows back to the browser**
+
+* Django → Gunicorn → back to Nginx (Server 1) → back to browser
+* React gets the API response and updates the page
+
+---
+
+## ✅ Summary of Flow
+
+```
+Browser
+  ↓
+[Firewall] Server 1
+  ↓
+[Nginx] serves React → React runs in browser
+  ↓
+[React calls API /api/...]
+  ↓
+[Nginx (Server 1) reverse-proxies]
+  ↓
+[Firewall] Server 2 (only accepts from Server 1)
+  ↓
+[Gunicorn] → Django
+  ↓
+Returns response to React in browser
+```
+
+---

@@ -1,0 +1,32 @@
+A **Higher-Order Component (HOC)** is a function that takes a component and returns a new component with extra behavior.
+
+Think of it like adding a feature to an existing component without changing that component’s code.
+
+### Real-time example: show a page only to logged-in users
+
+```jsx
+function withLoginCheck(Component) {
+  return function ProtectedPage(props) {
+    const isLoggedIn = true; // Imagine this comes from your auth system
+
+    if (!isLoggedIn) {
+      return <p>Please log in to view this page.</p>;
+    }
+
+    return <Component {...props} />;
+  };
+}
+
+function Dashboard() {
+  return <h1>Your dashboard</h1>;
+}
+
+const ProtectedDashboard = withLoginCheck(Dashboard);
+
+// Render it:
+// <ProtectedDashboard />
+```
+
+`withLoginCheck` receives `Dashboard` and returns `ProtectedDashboard`. The new component checks whether the user is logged in, then either shows a message or renders the dashboard.
+
+**In short:** `HOC = function that wraps a component to add reusable behavior.` HOCs are useful when several components need the same behavior, though hooks are often used for sharing logic in modern React. [React docs](https://legacy.reactjs.org/docs/higher-order-components.html)

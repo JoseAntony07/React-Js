@@ -1,0 +1,118 @@
+
+## 🧱 Setup: Django + React in the Same Server
+
+```
+Same Server:
+- Firewall
+- Nginx
+- React (frontend)
+- Gunicorn
+- Django (backend)
+```
+
+---
+
+## 🌐 What Happens When User Visits the Website?
+
+### Example: User goes to `https://yourdomain.com`
+
+---
+
+### ✅ 1. **User types URL into the browser**
+
+* Browser sends an HTTPS request to `yourdomain.com` → goes to your server’s IP
+
+---
+
+### ✅ 2. **Firewall on your server allows the request**
+
+* Port `443` (HTTPS) or `80` (HTTP) is open
+* Firewall lets the request reach Nginx
+
+---
+
+### ✅ 3. **Nginx handles the request**
+
+* Nginx checks the request path:
+
+  * If it’s `/` or a static file like `/index.html`, `/main.js` → serve **React app**
+  * If it’s an API path like `/api/products` → proxy to **Gunicorn/Django**
+
+---
+
+### ✅ 4. **React app loads in browser**
+
+* Nginx serves `index.html` and JS/CSS files from React’s `build/` directory
+* Browser runs React app
+
+---
+
+### ✅ 5. **React makes API calls (like `/api/products`)**
+
+* Those API calls go to the same domain (e.g., `https://yourdomain.com/api/...`)
+* Nginx receives the request again
+
+---
+
+### ✅ 6. **Nginx proxies API calls to Gunicorn**
+
+* Nginx is configured to forward `/api/` to Gunicorn (e.g., on `127.0.0.1:8000`)
+* Gunicorn passes the request to Django
+
+---
+
+### ✅ 7. **Django handles the API call**
+
+* Django processes data and returns JSON or response
+* Response goes: Django → Gunicorn → Nginx → browser
+
+---
+
+## ✅ Benefits of Same-Server Setup
+
+| Advantage                  | Description                                    |
+| -------------------------- | ---------------------------------------------- |
+| Easier setup               | Only 1 Nginx to configure                      |
+| No cross-server networking | No need to expose backend ports                |
+| No CORS issues             | Same origin used for both frontend and backend |
+| Better performance         | Local communication between Nginx and Gunicorn |
+
+---
+
+## 🔀 Example Nginx Config for Combined Setup
+
+```nginx
+server {
+    listen 80;
+    server_name yourdomain.com;
+
+    # Serve React frontend
+    root /var/www/react-app/build;
+    index index.html;
+
+    location / {
+        try_files $uri /index.html;
+    }
+
+    # Proxy API calls to Django backend
+    location /api/ {
+        proxy_pass http://127.0.0.1:8000;  # Gunicorn
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+---
+
+## ✅ Summary
+
+```
+User → [Firewall] → [Nginx]
+   → / (React)
+   → /api/... (Gunicorn → Django)
+```
+
+Everything stays inside one server — simpler, faster, and more secure.
+
+Let me know if you want help setting this up with Docker, HTTPS, or deployment.

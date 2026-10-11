@@ -1,0 +1,225 @@
+# Class vs. Function Components in React
+
+Both let you build reusable UI pieces. The difference is how you write them and how they manage state and lifecycle.
+
+## Class components
+
+A class component is an ES6 class that extends `React.Component` and must have a `render()` method.
+
+```jsx
+import React, { Component } from "react";
+
+class Counter extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { count: 0 };
+    this.increment = this.increment.bind(this); // needed for `this`
+  }
+
+  componentDidMount() {
+    document.title = `Count: ${this.state.count}`;
+  }
+
+  componentDidUpdate() {
+    document.title = `Count: ${this.state.count}`;
+  }
+
+  increment() {
+    this.setState({ count: this.state.count + 1 });
+  }
+
+  render() {
+    return (
+      <div>
+        <p>{this.props.label}: {this.state.count}</p>
+        <button onClick={this.increment}>Add</button>
+      </div>
+    );
+  }
+}
+```
+
+- State lives in `this.state` and is updated with `this.setState()`.
+- Props are read from `this.props`.
+- Side effects go in lifecycle methods: `componentDidMount`, `componentDidUpdate`, `componentWillUnmount`.
+- You have to manage `this` binding.
+
+## Function components
+
+A function component is a plain JavaScript function that takes props and returns JSX. Since React 16.8, **Hooks** give them state and lifecycle features.
+
+```jsx
+import { useState, useEffect } from "react";
+
+function Counter({ label }) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    document.title = `Count: ${count}`;
+  }, [count]);
+
+  return (
+    <div>
+      <p>{label}: {count}</p>
+      <button onClick={() => setCount(count + 1)}>Add</button>
+    </div>
+  );
+}
+```
+
+- State uses `useState`, and side effects use `useEffect`.
+- Props are just function arguments.
+- There is no `this`, no constructor, and no binding.
+
+## Lifecycle mapping
+
+| Class | Function (Hooks) |
+|---|---|
+| `this.state` / `setState` | `useState` |
+| `componentDidMount` | `useEffect(() => {...}, [])` |
+| `componentDidUpdate` | `useEffect(() => {...}, [dep])` |
+| `componentWillUnmount` | cleanup function returned from `useEffect` |
+| `shouldComponentUpdate` | `React.memo`, `useMemo` |
+| `createContext` consumer / `static contextType` | `useContext` |
+
+## Key differences
+
+- **Less boilerplate:** function components are shorter and easier to read.
+- **Logic reuse:** with classes you needed HOCs or render props. With functions you write **custom hooks** (e.g. `useFetch`), which are much simpler.
+- **Related logic stays together:** in classes, one concern (like a subscription) gets split across `componentDidMount` and `componentWillUnmount`. A single `useEffect` keeps it in one place.
+- **Closures over `this`:** function components capture the props and state from each render, which avoids a class of stale-`this` bugs.
+- **Error boundaries:** these still require a class component (`componentDidCatch` / `getDerivedStateFromError`), as there's no hook equivalent yet.
+
+## Which should you use?
+
+Use **function components with hooks** for all new code. That's the direction the React team and ecosystem have taken. Class components aren't deprecated and still work fine, so you'll run into them in older codebases, and you only need to write one for error boundaries.
+
+-----------------------------------------------------------
+
+# React Lifecycle Features
+
+Every component goes through three main phases: **mounting** (added to the DOM), **updating** (re-rendered because props or state changed), and **unmounting** (removed from the DOM). There's also an **error handling** phase.
+
+## Class component lifecycle
+
+### 1. Mounting
+Runs once when the component is created and inserted.
+
+| Method | Purpose |
+|---|---|
+| `constructor()` | Initialize state, bind methods |
+| `static getDerivedStateFromProps()` | Rarely needed; sync state from props before render |
+| `render()` | Return the JSX (must be pure) |
+| `componentDidMount()` | Runs after the first render. Fetch data, set up subscriptions and timers |
+
+### 2. Updating
+Runs whenever props or state change.
+
+| Method | Purpose |
+|---|---|
+| `shouldComponentUpdate(nextProps, nextState)` | Return `false` to skip a re-render (performance) |
+| `render()` | Re-renders |
+| `getSnapshotBeforeUpdate()` | Read the DOM (e.g. scroll position) just before it changes |
+| `componentDidUpdate(prevProps, prevState)` | Runs after the update. React to prop/state changes, refetch data |
+
+### 3. Unmounting
+
+| Method | Purpose |
+|---|---|
+| `componentWillUnmount()` | Cleanup: clear timers, cancel requests, remove listeners |
+
+### 4. Error handling
+
+| Method | Purpose |
+|---|---|
+| `static getDerivedStateFromError()` | Update state to show a fallback UI |
+| `componentDidCatch(error, info)` | Log the error |
+
+```jsx
+class Clock extends React.Component {
+  state = { time: new Date() };
+
+  componentDidMount() {
+    this.timer = setInterval(() => this.setState({ time: new Date() }), 1000);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.userId !== this.props.userId) {
+      this.loadUser(this.props.userId);
+    }
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.timer); // cleanup
+  }
+
+  render() {
+    return <p>{this.state.time.toLocaleTimeString()}</p>;
+  }
+}
+```
+
+> `componentWillMount`, `componentWillReceiveProps`, and `componentWillUpdate` are legacy. Avoid them (they now need the `UNSAFE_` prefix).
+
+## Function component lifecycle (Hooks)
+
+Function components don't have named lifecycle methods. **`useEffect`** covers most of them, and the dependency array controls when it runs.
+
+```jsx
+import { useState, useEffect } from "react";
+
+function Clock({ userId }) {
+  const [time, setTime] = useState(new Date());
+
+  // Mount + unmount (like componentDidMount / componentWillUnmount)
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer); // cleanup
+  }, []); // empty array = run once
+
+  // Update when userId changes (like componentDidUpdate)
+  useEffect(() => {
+    loadUser(userId);
+  }, [userId]);
+
+  // Runs after every render (no array)
+  useEffect(() => {
+    console.log("rendered");
+  });
+
+  return <p>{time.toLocaleTimeString()}</p>;
+}
+```
+
+### The dependency array
+
+| Form | Runs when |
+|---|---|
+| `useEffect(fn)` | After every render |
+| `useEffect(fn, [])` | Once, after the first render |
+| `useEffect(fn, [a, b])` | After the first render, and whenever `a` or `b` changes |
+
+The function you **return** from an effect is the cleanup. It runs before the effect re-runs and when the component unmounts.
+
+### Related hooks
+
+- **`useLayoutEffect`**: like `useEffect` but runs *synchronously after DOM changes, before the browser paints*. Use it to measure layout (similar to `getSnapshotBeforeUpdate`).
+- **`useMemo` / `React.memo`**: skip unnecessary work or re-renders (like `shouldComponentUpdate`).
+- **`useRef`**: keep a mutable value across renders without triggering one (like an instance field such as `this.timer`).
+
+## Things to watch for
+
+- **Strict Mode:** in development, React deliberately mounts, unmounts, and remounts components once to expose missing cleanup. If an effect runs twice locally, that's expected, and it means your cleanup should undo whatever the effect did.
+- **Missing dependencies:** if an effect uses a value that isn't in its array, it can read stale data. The `react-hooks/exhaustive-deps` lint rule catches this.
+- **Cleanup matters:** always cancel timers, subscriptions, and in-flight requests, or you'll get memory leaks and "state update on an unmounted component" bugs.
+
+-------------------------------------------------------------
+
+lifecycle
+----------
+
+**Lifecycle** is a component's life story: it appears (mount), changes (update), and disappears (unmount).
+
+**Class:** each stage has its own method: `componentDidMount`, `componentDidUpdate`, `componentWillUnmount`.
+
+**Function:** one hook, `useEffect`, covers all three: `[]` runs once, `[x]` runs when `x` changes, and the returned function is the cleanup.

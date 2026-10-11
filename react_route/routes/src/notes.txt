@@ -1,0 +1,14 @@
+// Using components and react-router-dom, we can replicate multiple pages in React 
+// even though it's a SPA (Single Page Application).
+
+// In a normal web application, each page has a separate HTML file. 
+// But in React, the entire app runs inside a single HTML file (index.html).
+
+// With the help of react-router-dom and routing concepts, 
+// React can display different components (pages) within that single HTML file,
+// making it *look like* multiple pages, while actually being a SPA.
+
+// The <Navbar /> component is common for all pages.
+// React will compare the current route with the new route (via Virtual DOM diffing)
+// and only update the changed components — it will not re-render the entire app 
+// or reload the Navbar each time.

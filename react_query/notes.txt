@@ -1,0 +1,30 @@
+## React Query: quick notes
+
+- Works like a React hook for **server data**.
+- `useQuery` gives you the **data**, **loading status**, and **error**.
+- It **caches** query results using the `queryKey`.
+- If cached data is considered fresh, React Query can reuse it without making another API call.
+- When data is fetched again, React Query updates the cache with the latest result.
+- By default, cached data may be fetched again in the background when it becomes stale or when certain events occur. To control this, set options such as `staleTime`.
+- You can manually request fresh data with `refetch()`.
+- Use `useMutation` for creating, updating, or deleting server data, then invalidate or update related cached queries.
+
+```jsx
+const { data, isPending, error, refetch } = useQuery({
+  queryKey: ["repo", repoUrl],
+  queryFn: () => fetch(repoUrl).then((res) => res.json()),
+  staleTime: 60_000, // Treat data as fresh for one minute
+});
+```
+
+**In short:** React Query fetches and caches server data, tracks loading and errors, and helps keep cached data up to date.
+
+
+
+React Query (TanStack Query): short notes
+- What it does: Helps React apps fetch, cache, refresh, and update data from a server.
+- Use it for: Server data such as API results, user profiles, product lists, and GitHub repo details.
+- Why use it: It handles loading and error states, caches results, and can refetch stale data for you.
+- Queries read data: Use useQuery for fetching.
+- Mutations change data: Use useMutation for creating, updating, or deleting data.
+- Not for: Local UI state like whether a menu is open. Use React state (useState) for that.
