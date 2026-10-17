@@ -26,11 +26,11 @@ const App = () => {
     }
 
     if (editIndex !== null) {
-      setUsers((currUsers) =>
+      setUsers((currUsers) => // Update User
         currUsers.map((user, index) => (index === editIndex ? userInfo : user))
       );
       setEditIndex(null);
-    } else {
+    } else { // Create User
       setUsers((currUsers) => [...currUsers, userInfo]);
     }
 
